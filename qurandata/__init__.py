@@ -3,11 +3,15 @@ import re
 class AyaRef:
     def __init__(self, reftxt, contextsura=None):
         m = re.match(r'(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?::A?(?P<endaya>[0-9]+))?',reftxt)
+        self.expr = reftxt
         self.startaya=int(m.group('startaya'))
         sura = m.group('sura')
         endaya = m.group('endaya')
         self.endaya = int(endaya) if endaya else self.startaya
         self.suraidx = int(sura) if sura else contextsura
+    
+    def __repr__(self):
+        return "<AyaRef %s (sura %r, ayas %r-%r)>" % (self.expr, self.suraidx, self.startaya, self.endaya)
     
     def isabsolute(self):
         return self.suraidx != None
@@ -21,7 +25,7 @@ class AyaRef:
     
 def _parserefs(text, suraidx=None):
     ret = []
-    for ref in re.findall(r'\b((?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?)\b','S2A1 S3A3, S4A4'):
+    for ref in re.findall(r'\b((?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?)\b',text):
         r = AyaRef(ref, contextsura=suraidx)
         if not r.isabsolute(): continue
         ret.append(r)
