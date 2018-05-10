@@ -1,4 +1,5 @@
 from django.db import models
+import re
 
 # Create your models here.
 
@@ -12,8 +13,7 @@ class Sura(models.Model):
     
     def __str__(self):
         return "(%d) %s" % (self.index,self.name)
-    
-    
+
 class Aya(models.Model):
     sura = models.ForeignKey(Sura, on_delete=models.CASCADE)
     index = models.PositiveIntegerField()

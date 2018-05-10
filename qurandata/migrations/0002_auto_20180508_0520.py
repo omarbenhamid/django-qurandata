@@ -13,6 +13,9 @@ def import_data(apps, schema_editor):
     
     Sura = apps.get_model('qurandata', 'Sura')
     Aya = apps.get_model('qurandata', 'Aya')
+    
+    Sura.objects.all().delete()
+    
     for suradata in data.findall('sura'):
         s = suradata.attrib
         ayas = suradata.findall('aya')
