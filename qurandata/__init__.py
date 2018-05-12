@@ -78,5 +78,5 @@ def refs_from_text(text, context=""):
     """
     if context==None: context=""
     ayarefs = _parserefs(context)
-    suraidx = ayarefs.pop() if len(ayarefs) > 0 else None
+    suraidx = ayarefs.pop().suraidx if len(ayarefs) > 0 else None
     return _parserefs(text, suraidx)
