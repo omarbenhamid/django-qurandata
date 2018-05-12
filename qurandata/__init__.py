@@ -49,6 +49,14 @@ class AyaRef:
                 models.Sura.objects.get(index=self.suraidx).name if self.suraidx else '',
                 self.startaya, self.endaya)
     
+    
+    def astext(self):
+        if self.fullsura:
+            return models.Sura.objects.get(index=self.suraidx).name
+        else:
+            return '%s من %d إلى %d' % (models.Sura.objects.get(index=self.suraidx).name if self.suraidx else '',
+                self.startaya, self.endaya)
+    
 def _parserefs(text, suraidx=None):
     ret = []
     for ref in re.findall(r'\b(S[0-9]+|(?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?)\b',text):
