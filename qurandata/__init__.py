@@ -2,7 +2,7 @@ import re
 
 class AyaRef:
     def __init__(self, reftxt, contextsura=None):
-        m = re.match(r'(?:S(?P<singlesura>[0-9]+)|(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?::A?(?P<endaya>[0-9]+))?)',reftxt)
+        m = re.match(r'^(?:S(?P<singlesura>[0-9]+)|(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?::A?(?P<endaya>[0-9]+))?)$',reftxt)
         self.expr = reftxt
         ssura = m.group('singlesura')
         if ssura:
