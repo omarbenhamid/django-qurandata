@@ -25,6 +25,9 @@ class Aya(models.Model):
     def get_url(self, mushaf="hafs"):
         return "http://quran.ksu.edu.sa/index.php#aya=%d_%d&m=%s" % (self.sura.index, self.index, mushaf)
     
+    def get_audio_url(self):
+        #return "http://everyayah.com/data/Ayman_Sowaid_64kbps/%03d%03d.mp3" % (self.index, self.sura.index)
+        return "http://cdn.ksu.edu.sa/quran/ayat/mp3/Ayman_Sowaid_64kbps/%03d%03d.mp3" % (self.sura.index, self.index)
     
     def __str__(self):
         return "(%d:%d) %s" % (self.sura.index, self.index,self.text)
