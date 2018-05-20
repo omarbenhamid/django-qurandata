@@ -18,7 +18,7 @@ class AyaRef:
             self.suraidx = int(ssura)
             self.startaya = 1
             self._endaya = None
-            if validate: self._validate()
+            if validate: self.validate()
             return
         self.fullsura = False
         sura = m.group('sura')
@@ -26,9 +26,9 @@ class AyaRef:
         self.startaya=int(m.group('startaya'))
         endaya = m.group('endaya')
         self._endaya = int(endaya) if endaya else self.startaya
-        if validate: self._validate()
+        if validate: self.validate()
     
-    def _validate(self):
+    def validate(self):
         if self.startaya <= 0:
             raise BadRef(self.expr, 'bat-start-aya-index')
         
@@ -87,17 +87,22 @@ class AyaRef:
             return '%s من %d إلى %d' % (models.Sura.objects.get(index=self.suraidx).name if self.suraidx else '',
                 self.startaya, self.endaya)
     
-def _parserefs(text, suraidx=None, validate=True):
+def _parserefs(text, suraidx=None, ignoreinvalid=True):
     ret = []
     for ref in re.findall(r'\b(S[0-9]+|(?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?)\b',text):
-        r = AyaRef(ref, contextsura=suraidx, validate=validate)
+        r = AyaRef(ref, contextsura=suraidx, validate=False)
+        try:
+            r.validate()
+        except:
+            if ignoreinvalid: continue
+            else: raise
         if not r.isabsolute(): continue
         ret.append(r)
         suraidx = r.suraidx
     
     return ret
 
-def refs_from_text(text, context="", validate=True):
+def refs_from_text(text, context="", ignoreinvalid=True):
     """
         Parses ayarange reference and returns an Ayaref object for each.
         Referances in text are in the format :
@@ -106,9 +111,11 @@ def refs_from_text(text, context="", validate=True):
             - A3 is aya 3 of last surah identified in text (or in contexttext)
             - S1A2:5 or S1A2:A5 is ayat form aya 2 to aya 5 of surah 1
             
-        when validation is enabled we chack that te sura index and ayats in sura really exist.
+        ignoreinvalid is true by default, invalid aya ranges are silently ingored.
+        When set to false, they provoque a BadRef exception if an invalid ayaref is encountred.
     """
     if context==None: context=""
-    ayarefs = _parserefs(context, validate=validate)
+    #Ignore invalid refs when parsing context
+    ayarefs = _parserefs(context, ignoreinvalid=True)
     suraidx = ayarefs.pop().suraidx if len(ayarefs) > 0 else None
-    return _parserefs(text, suraidx, validate=validate)
+    return _parserefs(text, suraidx, ignoreinvalid=ignoreinvalid)
