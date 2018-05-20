@@ -10,7 +10,7 @@ class BadRef(Exception):
 
 class AyaRef:
     def __init__(self, reftxt, contextsura=None, validate=True):
-        m = re.match(r'^(?:S(?P<singlesura>[0-9]+)|(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?::A?(?P<endaya>[0-9]+))?)$',reftxt)
+        m = re.match(r'^(?:S(?P<singlesura>[0-9]+)|(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?::A?(?P<endaya>[0-9]+))?)$',reftxt, flags=re.I)
         self.expr = reftxt
         ssura = m.group('singlesura')
         if ssura:
@@ -89,7 +89,7 @@ class AyaRef:
     
 def _parserefs(text, suraidx=None, ignoreinvalid=True):
     ret = []
-    for ref in re.findall(r'\b(S[0-9]+|(?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?)\b',text):
+    for ref in re.findall(r'\b(S[0-9]+|(?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?)\b',text, flags=re.I):
         r = AyaRef(ref, contextsura=suraidx, validate=False)
         try:
             r.validate()
