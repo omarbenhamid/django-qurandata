@@ -1,5 +1,6 @@
 from django.db import models
 import re
+from _tracemalloc import start
 
 # Create your models here.
 
@@ -31,3 +32,12 @@ class Aya(models.Model):
     
     def __str__(self):
         return "(%d:%d) %s" % (self.sura.index, self.index,self.text)
+    
+class Quarter(models.Model):
+    index = models.PositiveIntegerField("Global position of quarter")
+    hizb = models.PositiveIntegerField("Index of hizb")
+    pos_in_hizb = models.PositiveIntegerField("Posiiton in hizb : 1 to 4")
+    
+    startaya = models.ForeignKey(Aya, related_name='+', on_delete=models.CASCADE)
+    endaya = models.ForeignKey(Aya, related_name='+', on_delete=models.CASCADE)
+    
