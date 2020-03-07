@@ -128,6 +128,7 @@ def parse_hizbrefs(text):
         label += ' '.join(firstq.startaya.text.split(maxsplit=2)[0:2])
         firstsura=firstq.startaya.sura
         lastsura=lastq.endaya.sura
+        label += '... (%s ص%d)' % (firstsura.name, firstq.startaya.page)
         for s in range(firstsura.index, lastsura.index+1):
             if s not in (firstsura.index, lastsura.index):
                 yield AyaRef(reftxt=m.group(), label=label, sura=s)
