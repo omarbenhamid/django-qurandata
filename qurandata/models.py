@@ -19,6 +19,7 @@ class Aya(models.Model):
     sura = models.ForeignKey(Sura, on_delete=models.CASCADE)
     index = models.PositiveIntegerField()
     text = models.TextField()
+    page = models.PositiveIntegerField("Page in madani quran")
     
     class Meta:
         ordering=['sura','index']
