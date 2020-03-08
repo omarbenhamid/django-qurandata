@@ -81,26 +81,26 @@ class AyaRef:
         return models.Aya.objects.filter(sura__index=self.suraidx, index__range=(self.startaya, self.endaya)).all()
     
     def ashtml(self):
-        if self.label:
-            return '<span dir="rtl" title="%s">%s</span>' % (self.expr,
-                self.label)
-        elif self.fullsura:
-            return '<span dir="rtl" title="%s">%s</span>' % (self.expr,
-                models.Sura.objects.get(index=self.suraidx).name)
-        else:
-            return '<span dir="rtl" title="%s">%s من <span class="citation">%d</span> إلى <span class="citation">%d</span></span>' % (self.expr,
-                models.Sura.objects.get(index=self.suraidx).name if self.suraidx else '',
-                self.startaya, self.endaya)
+        return '<span dir="rtl" title="%s">%s</span>' % (self.expr,
+                self.astext(ayapfx='<span class="citation">', ayasfx='</span>'))
+        
     
-    
-    def astext(self):
+    def astext(self, ayapfx='(', ayasfx=')'):
         if self.label:
             return self.label
-        elif self.fullsura:
-            return models.Sura.objects.get(index=self.suraidx).name
+        if not self.suraidx:
+            return self.expr
+        
+        surainfo = models.Aya.objects.filter(index=1, sura__index=self.suraidx)\
+                    .values('sura__name','page').first()
+        if not surainfo:
+            return self.expr
+        
+        if self.fullsura:
+            return '%(sura__name)s (ص%(page)d)' % surainfo
         else:
-            return '%s من %d إلى %d' % (models.Sura.objects.get(index=self.suraidx).name if self.suraidx else '',
-                self.startaya, self.endaya)
+            return '%s (ص%d) من %s%d%s إلى %s%d%s' % ( surainfo['sura__name'], 
+                surainfo['page'], ayapfx, self.startaya, ayasfx, ayapfx, self.endaya, ayasfx)
 
 def parse_hizbrefs(text):
     HRREGEX=r'\b(H(?P<singlehizb>[0-9]+)|H(?P<nisfhizb>[0-9]+)N(?P<nisfnum>[1-2])|H(?P<quarterhizb>[0-9]+)R(?P<quarternum>[1-4]))\b'
