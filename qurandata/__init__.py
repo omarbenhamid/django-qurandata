@@ -1,4 +1,6 @@
 import re
+from django.db.models.aggregates import Max, Min
+from django.db.models.query import Q
 
 class BadRef(Exception):
     def __init__(self, ref, errcode):
@@ -146,7 +148,45 @@ def parse_hizbrefs(text):
                 #this implcitly means the lastsura !=firstsura or last if would have matched.
                 yield AyaRef(reftxt=m.group(), label=label, sura=s, firstaya=1, endaya=lastq.endaya.index, validate=False)
             
-
+def _parse_pagerefs(text):
+    PRREGEX=r'\b(P(?P<singlepage>[0-9]+)|S(?P<sura>[0-9]+)P(?P<page>[0-9]+))\b'
+    for m in re.finditer(PRREGEX,text, flags=re.I):
+        if m.group('sura'):
+            page = int(m.group('page'))
+            try:
+                sura = models.Sura.objects.get(index=int(m.group('sura')))
+            except:
+                continue
+            label = '%s ص %d' % (sura.name, page)
+            yield AyaRef(reftxt=m.group(), label=label, sura=sura.index)
+            continue
+        
+        page = int(m.group('singlepage'))
+        aya = models.Aya.objects.filter(page=page).order_by('sura__index','index').first()
+        label='ص %d - %s ...'% (page, ' '.join(aya.text.split(maxsplit=2)[0:2]))
+        
+        sidx = None
+        saya = None
+        eaya = None
+        for aya in models.Aya.objects.filter(page=page)\
+                        .select_related('sura').order_by('sura__index','index'):
+            
+            if sidx == None:
+                sidx = aya.sura.index
+                saya = aya.index
+                eaya = saya
+            elif sidx == aya.sura.index:
+                eaya = aya.index
+            else:
+                yield AyaRef(reftxt=m.group(), label=label, sura=sidx,
+                         firstaya=saya, endaya=eaya)
+                sidx = None
+        
+        if sidx != None:
+            yield AyaRef(reftxt=m.group(), label=label, sura=sidx,
+                        firstaya=saya, endaya=eaya)
+            
+            
 def _parserefs(text, suraidx=None, ignoreinvalid=True):
     ret = []
     for ref in re.findall(r'\b(S[0-9]+|(?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?)\b',text, flags=re.I):
@@ -159,7 +199,7 @@ def _parserefs(text, suraidx=None, ignoreinvalid=True):
         if not r.isabsolute(): continue
         ret.append(r)
         suraidx = r.suraidx
-    
+        
     return ret
 
 def refs_from_text(text, context="", ignoreinvalid=True):
@@ -170,7 +210,9 @@ def refs_from_text(text, context="", ignoreinvalid=True):
             - S1A2 is surah 1 ayah 2
             - A3 is aya 3 of last surah identified in text (or in contexttext)
             - S1A2:5 or S1A2:A5 is ayat form aya 2 to aya 5 of surah 1
-            
+        
+        Or S?P? where S is sura and P is page.
+        
         ignoreinvalid is true by default, invalid aya ranges are silently ingored.
         When set to false, they provoque a BadRef exception if an invalid ayaref is encountred.
     """
@@ -180,4 +222,5 @@ def refs_from_text(text, context="", ignoreinvalid=True):
     suraidx = ayarefs.pop().suraidx if len(ayarefs) > 0 else None
     ret = _parserefs(text, suraidx, ignoreinvalid=ignoreinvalid)
     ret.extend(parse_hizbrefs(text))
+    ret.extend(_parse_pagerefs(text))
     return ret
