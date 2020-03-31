@@ -11,9 +11,13 @@ class BadRef(Exception):
         return 'Bad Aya Ref %s : %s' % (self.ref, self.errcode)
 
 class AyaRef:
-    def __init__(self, reftxt, contextsura=None, validate=True, sura=None, firstaya=None, endaya=None, label=None):
+    def __init__(self, reftxt, contextsura=None, validate=True, sura=None, firstaya=None, endaya=None, label=None, wordnum=None):
+        """
+            wordnum : index of the word this ref refers to. it is 1 starting index from first aya.
+        """
         self.expr = reftxt
         self.label = label
+        self.wordnum = wordnum
         if sura==None: 
             self.__init_from_reftxt(reftxt, contextsura)
         else:
@@ -25,7 +29,7 @@ class AyaRef:
         if validate: self.validate()
             
     def __init_from_reftxt(self, reftxt, contextsura=None):
-        m = re.match(r'^(?:S(?P<singlesura>[0-9]+)|(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?::A?(?P<endaya>[0-9]+))?)$',reftxt, flags=re.I)
+        m = re.match(r'^(?:S(?P<singlesura>[0-9]+)|(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?::A?(?P<endaya>[0-9]+))?(?:W(?P<wordnum>[0-9]+))?)$',reftxt, flags=re.I)
         ssura = m.group('singlesura')
         if ssura:
             self.fullsura = True
@@ -39,6 +43,10 @@ class AyaRef:
         self.startaya=int(m.group('startaya'))
         endaya = m.group('endaya')
         self._endaya = int(endaya) if endaya else self.startaya
+        wn = m.group('wordnum')
+        if wn:
+            self.wordnum=int(wn)
+            if self.wordnum == 0: self.wordnum=1
         
     def validate(self):
         if self.startaya <= 0:
@@ -100,6 +108,9 @@ class AyaRef:
         
         if self.fullsura:
             return '%(sura__name)s (ص%(page)d)' % surainfo
+        elif self.startaya == self.endaya:
+            return '%s (ص%d) اية %s%d%s' % ( surainfo['sura__name'], 
+                surainfo['page'], ayapfx, self.startaya, ayasfx)
         else:
             return '%s (ص%d) من %s%d%s إلى %s%d%s' % ( surainfo['sura__name'], 
                 surainfo['page'], ayapfx, self.startaya, ayasfx, ayapfx, self.endaya, ayasfx)
@@ -189,7 +200,7 @@ def _parse_pagerefs(text):
             
 def _parserefs(text, suraidx=None, ignoreinvalid=True):
     ret = []
-    for ref in re.findall(r'\b(S[0-9]+|(?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?)\b',text, flags=re.I):
+    for ref in re.findall(r'\b(S[0-9]+|(?:S[0-9]+)?A[0-9]+(?::A?[0-9]+)?(?:W[0-9]+)?)\b',text, flags=re.I):
         r = AyaRef(ref, contextsura=suraidx, validate=False)
         try:
             r.validate()
