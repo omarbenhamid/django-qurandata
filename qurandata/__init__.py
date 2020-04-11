@@ -11,13 +11,15 @@ class BadRef(Exception):
         return 'Bad Aya Ref %s : %s' % (self.ref, self.errcode)
 
 class AyaRef:
-    def __init__(self, reftxt, contextsura=None, validate=True, sura=None, firstaya=None, endaya=None, label=None, wordnum=None):
+    def __init__(self, reftxt, contextsura=None, validate=True, sura=None, firstaya=None, endaya=None, label=None, startword=None, endword=None):
         """
-            wordnum : index of the word this ref refers to. it is 1 starting index from first aya.
+            startword : index of the word this ref refers to. it is 1 starting index from startaya.
+            endword: index of the word this ref refers to. it is 1 starting index from endaya
         """
         self.expr = reftxt
         self.label = label
-        self.wordnum = wordnum
+        self.startword = startword
+        self.endword = endword
         if sura==None: 
             self.__init_from_reftxt(reftxt, contextsura)
         else:
@@ -29,7 +31,7 @@ class AyaRef:
         if validate: self.validate()
             
     def __init_from_reftxt(self, reftxt, contextsura=None):
-        m = re.match(r'^(?:S(?P<singlesura>[0-9]+)|(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?::A?(?P<endaya>[0-9]+))?(?:W(?P<wordnum>[0-9]+))?)$',reftxt, flags=re.I)
+        m = re.match(r'^(?:S(?P<singlesura>[0-9]+)|(?:S(?P<sura>[0-9]+))?A(?P<startaya>[0-9]+)(?:W(?P<startword>[0-9]+))?(?::A?(?P<endaya>[0-9]+))?(?:W(?P<endword>[0-9]+))?)$',reftxt, flags=re.I)
         ssura = m.group('singlesura')
         if ssura:
             self.fullsura = True
@@ -43,11 +45,14 @@ class AyaRef:
         self.startaya=int(m.group('startaya'))
         endaya = m.group('endaya')
         self._endaya = int(endaya) if endaya else self.startaya
-        wn = m.group('wordnum')
+        wn = m.group('startword')
         if wn:
-            self.wordnum=int(wn)
-            if self.wordnum == 0: self.wordnum=1
-        
+            self.startword=int(wn)
+            if self.startword == 0: self.startword=1
+        wn = m.group('endword')
+        if wn:
+            self.endword=int(wn)
+            if self.endword == 0: self.startword=1
     def validate(self):
         if self.startaya <= 0:
             raise BadRef(self.expr, 'bat-start-aya-index')
