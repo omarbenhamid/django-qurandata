@@ -106,10 +106,12 @@ class AyaRef:
         if not self.suraidx:
             return self.expr
         
-        surainfo = models.Aya.objects.filter(index=1, sura__index=self.suraidx)\
-                    .values('sura__name','page').first()
-        if not surainfo:
-            return self.expr
+        a = models.Aya.objects.get_by_index(self.suraidx,1)
+        if not a : return self.expr
+        surainfo={
+            'sura__name': a.sura.name,
+            'page': a.page
+        }
         
         if self.fullsura:
             return '%(sura__name)s (ص%(page)d)' % surainfo
@@ -178,14 +180,13 @@ def _parse_pagerefs(text):
             continue
         
         page = int(m.group('singlepage'))
-        aya = models.Aya.objects.filter(page=page).order_by('sura__index','index').first()
+        aya = models.Aya.objects.list_by_page(page)[0]
         label='ص %d - %s ...'% (page, ' '.join(aya.text.split(maxsplit=2)[0:2]))
         
         sidx = None
         saya = None
         eaya = None
-        for aya in models.Aya.objects.filter(page=page)\
-                        .select_related('sura').order_by('sura__index','index'):
+        for aya in models.Aya.objects.list_by_page(page):
             
             if sidx == None:
                 sidx = aya.sura.index
