@@ -100,7 +100,7 @@ class AyaRef:
                 self.astext(ayapfx='<span class="citation">', ayasfx='</span>'))
         
     
-    def astext(self, ayapfx='(', ayasfx=')'):
+    def astext(self, ayapfx='', ayasfx=''):
         if self.label:
             return self.label
         if not self.suraidx:
@@ -114,12 +114,12 @@ class AyaRef:
         }
         
         if self.fullsura:
-            return '%(sura__name)s (ص%(page)d)' % surainfo
+            return '%(sura__name)s ص%(page)d' % surainfo
         elif self.startaya == self.endaya:
-            return '%s (ص%d) اية %s%d%s' % ( surainfo['sura__name'], 
+            return '%s ص%d اية %s%d%s' % ( surainfo['sura__name'], 
                 surainfo['page'], ayapfx, self.startaya, ayasfx)
         else:
-            return '%s (ص%d) من %s%d%s إلى %s%d%s' % ( surainfo['sura__name'], 
+            return '%s ص%d من %s%d%s إلى %s%d%s' % ( surainfo['sura__name'], 
                 surainfo['page'], ayapfx, self.startaya, ayasfx, ayapfx, self.endaya, ayasfx)
 
 def parse_hizbrefs(text):
@@ -148,7 +148,7 @@ def parse_hizbrefs(text):
         label += ' '.join(firstq.startaya.text.split(maxsplit=2)[0:2])
         firstsura=firstq.startaya.sura
         lastsura=lastq.endaya.sura
-        label += '... (%s ص%d)' % (firstsura.name, firstq.startaya.page)
+        label += '... %s ص%d' % (firstsura.name, firstq.startaya.page)
         for s in range(firstsura.index, lastsura.index+1):
             if s not in (firstsura.index, lastsura.index):
                 yield AyaRef(reftxt=m.group(), label=label, sura=s)
